@@ -4,6 +4,10 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 
+
+
+from bson import ObjectId
+
 # Load environment variables
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URL")
@@ -63,3 +67,38 @@ def create_item(data: User):
             "status": "error",
             "error": str(e)
         }
+    
+@app.get("/{id}")
+def get_item(id: str):
+    try:
+        try:
+            obj_id = ObjectId(id)
+        except Exception:
+            return {
+                "message": "Invalid id format",
+                "status": "error"
+            }
+        document = collection.find_one({"_id": obj_id})
+        if document:
+            item = {
+                "id": str(document["_id"]),
+                "name": document.get("name"),
+                "age": document.get("age"),
+                "cgpa": document.get("cgpa"),
+            }
+            return {
+                "data": item,
+                "message": "Item retrieved successfully",
+                "status": "success"
+            }
+        else:
+            return {
+                "message": "Item not found",
+                "status": "error"
+            }
+    except Exception as e:
+        return {
+            "message": "Error retrieving item",
+            "status": "error",
+            "error": str(e)
+        }    
